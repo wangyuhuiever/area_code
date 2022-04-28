@@ -30,3 +30,6 @@ python generate.py ${level} ${option}
 level 为 province, city, county, town, village其中一个
 当level为county时，option如果有值的话，jsonl会同时添加city的编码
 
+
+## TODO
+目前只爬了最新一年的，加个参数爬指定年份的。
