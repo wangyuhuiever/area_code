@@ -4,6 +4,6 @@ services:
   spider:
     image: yuhuiwang/area_code:latest
     volumes:
-      - ./settings.py:/opt/spider/news/settings.py
+      - ./settings.py:/opt/spider/area_code/settings.py
       - ./result:/opt/spider/result  # generate生成的文件保存处
     scale: 1
