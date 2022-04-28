@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import sys
+import operator
 from area_code.mongo import MongoClient
 from bson2json import format_pure_json
 
@@ -19,7 +20,7 @@ def get_table(table_name):
 
 def get_data(table_name):
     table = get_table(table_name)
-    records = table.find()
+    records = table.find().sort([('code', 1)])
     return list(map(format_pure_json, records))
 
 
@@ -54,7 +55,7 @@ def get_city_data():
     return data
 
 
-def get_county_data():
+def get_county_data(with_city=False):
     city_data = get_city_data()
     county_data = get_data('county')
     data = []
@@ -67,6 +68,15 @@ def get_county_data():
             'city': city.get('city'),
             'county': county.get('name'),
         })
+    if with_city:
+        for city in city_data:
+            data.append({
+                'code': city.get('code').ljust(6, '0'),
+                'province': city.get('province'),
+                'city': city.get('city'),
+                'county': None
+            })
+    data = sorted(data, key=operator.itemgetter('code'))
     return data
 
 
@@ -106,17 +116,24 @@ def get_village_data():
     return data
 
 
-def save_jsonl(table):
-    data = eval(f'get_{table}_data')()
+def save_jsonl(table, with_city=False):
+    if table == 'county':
+        data = eval(f'get_{table}_data')(with_city)
+    else:
+        data = eval(f'get_{table}_data')()
     with open('result/area_code.jsonl', 'w') as file:
         file.writelines(map(format_write_string, data))
 
 
 if __name__ == '__main__':
     level = sys.argv[1]
+    try:
+        county_with_city = sys.argv[2]
+    except Exception as e:
+        county_with_city = False
     level_list = ['province', 'city', 'county', 'town', 'village']
     if level not in level_list:
         print(f'请输入正确的level： {", ".join(level_list)}')
     else:
-        save_jsonl(level)
+        save_jsonl(level, county_with_city)
 

@@ -15,6 +15,13 @@ class MongoMixin(object):
         collection.update_one({'code': self['code']}, {"$set": dict(self)}, upsert=True)
 
 
+class ErrorItem(scrapy.Item, MongoMixin):
+    _name = 'error'
+
+    url = scrapy.Field()
+    message = scrapy.Field()
+
+
 class ProvinceItem(scrapy.Item, MongoMixin):
     _name = 'province'
 
