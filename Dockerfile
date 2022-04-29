@@ -1,4 +1,4 @@
-FROM python:3.8.8
+FROM yuhuiwang/scrapy:2.6.1
 ENV PROJECTS_DIR=/opt/spider
 COPY . $PROJECTS_DIR
 COPY ./entrypoint.sh /

@@ -5,15 +5,27 @@ from area_code.items import ErrorItem, ProvinceItem, CityItem, CountyItem, TownI
 class AreaCodeSpider(scrapy.Spider):
     name = 'area_code'
     # allowed_domains = ['example.com']
-    start_urls = ['http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm']
+    # start_urls = ['http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm']
+    start_urls = ['http://localhost:5000/api/auth']
 
     def parse(self, response):
         content_list = response.css('.center_list_contlist li')
-        latest = content_list[0]
-        latest_url = latest.css('a::attr(href)').get()
-        yield response.follow(latest_url, callback=self.parse_province)
+        years = self.settings['YEARS']
+        if not years:
+            latest = content_list[0]
+            year = latest.css('.cont_tit03::text').get()
+            latest_url = latest.css('a::attr(href)').get()
+            yield response.follow(latest_url, callback=self.parse_province, meta={'year': year})
+        else:
+            for content in content_list:
+                year = content.css('.cont_tit03::text').get()
+                if 'all' in years or year in years:  # 如果列表中有all，则全部爬取
+                    url = content.css('a::attr(href)').get()
+                    if url:  # 有可能url为none
+                        yield response.follow(url, callback=self.parse_province, meta={'year': year})
 
     def parse_province(self, response):
+        year = response.meta.get('year')
         try:
             province_list = response.css('.provincetr td')
             for province in province_list:
@@ -22,10 +34,11 @@ class AreaCodeSpider(scrapy.Spider):
                 province_code = province_url.split('.')[0]
                 yield ProvinceItem(
                     code=province_code,
-                    name=province_name
+                    name=province_name,
+                    year=year
                 )
                 if self.settings['LEVEL_SPIDER'] > self.settings['LEVEL_PROVINCE']:
-                    yield response.follow(province_url, callback=self.parse_city)
+                    yield response.follow(province_url, callback=self.parse_city, meta={'year': year})
         except Exception as e:
             self.logger.error(e)
             yield ErrorItem(
@@ -34,6 +47,7 @@ class AreaCodeSpider(scrapy.Spider):
             )
 
     def parse_city(self, response):
+        year = response.meta.get('year')
         try:
             city_list = response.css('.citytr')
             for city in city_list:
@@ -44,10 +58,11 @@ class AreaCodeSpider(scrapy.Spider):
                 city_code = code_string.split('/')[1]
                 yield CityItem(
                     code=city_code,
-                    name=city_name
+                    name=city_name,
+                    year=year
                 )
                 if self.settings['LEVEL_SPIDER'] > self.settings['LEVEL_CITY']:
-                    yield response.follow(city_url, callback=self.parse_county)
+                    yield response.follow(city_url, callback=self.parse_county, meta={'year': year})
         except Exception as e:
             self.logger.error(e)
             yield ErrorItem(
@@ -56,6 +71,7 @@ class AreaCodeSpider(scrapy.Spider):
             )
 
     def parse_county(self, response):
+        year = response.meta.get('year')
         try:
             county_list = response.css('.countytr')
             for county in county_list:
@@ -69,17 +85,19 @@ class AreaCodeSpider(scrapy.Spider):
                     county_code = code_string.split('/')[1]
                     yield CountyItem(
                         code=county_code,
-                        name=county_name
+                        name=county_name,
+                        year=year
                     )
                     if self.settings['LEVEL_SPIDER'] > self.settings['LEVEL_COUNTY']:
-                        yield response.follow(county_url, callback=self.parse_town)
+                        yield response.follow(county_url, callback=self.parse_town, meta={'year': year})
                 else:
                     data = county.css('td::text').getall()
                     county_code = data[0][:6]
                     county_name = data[1]
                     yield CountyItem(
                         code=county_code,
-                        name=county_name
+                        name=county_name,
+                        year=year
                     )
         except Exception as e:
             self.logger.error(e)
@@ -89,6 +107,7 @@ class AreaCodeSpider(scrapy.Spider):
             )
 
     def parse_town(self, response):
+        year = response.meta.get('year')
         try:
             town_list = response.css('.towntr')
             for town in town_list:
@@ -100,10 +119,11 @@ class AreaCodeSpider(scrapy.Spider):
                     town_code = code_string.split('/')[1]
                     yield TownItem(
                         code=town_code,
-                        name=town_name
+                        name=town_name,
+                        year=year
                     )
                     if self.settings['LEVEL_SPIDER'] > self.settings['LEVEL_TOWN']:
-                        yield response.follow(town_url, callback=self.parse_village)
+                        yield response.follow(town_url, callback=self.parse_village, meta={'year': year})
         except Exception as e:
             self.logger.error(e)
             yield ErrorItem(
@@ -112,6 +132,7 @@ class AreaCodeSpider(scrapy.Spider):
             )
 
     def parse_village(self, response):
+        year = response.meta.get('year')
         try:
             village_list = response.css('.villagetr')
             for village in village_list:
@@ -121,7 +142,8 @@ class AreaCodeSpider(scrapy.Spider):
                     yield VillageItem(
                         code=code,
                         name=name,
-                        type=type
+                        type=type,
+                        year=year
                     )
         except Exception as e:
             self.logger.error(e)

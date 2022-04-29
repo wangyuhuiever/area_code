@@ -12,7 +12,7 @@ class MongoMixin(object):
 
     def upsert(self):
         collection = self.mongo.get_collection(self._name)
-        collection.update_one({'code': self['code']}, {"$set": dict(self)}, upsert=True)
+        collection.update_one({'code': self['code'], 'year': self['year']}, {"$set": dict(self)}, upsert=True)
 
 
 class ErrorItem(scrapy.Item, MongoMixin):
@@ -21,12 +21,17 @@ class ErrorItem(scrapy.Item, MongoMixin):
     url = scrapy.Field()
     message = scrapy.Field()
 
+    def upsert(self):
+        collection = self.mongo.get_collection(self._name)
+        collection.update_one({'url': self['url']}, {"$set": dict(self)}, upsert=True)
+
 
 class ProvinceItem(scrapy.Item, MongoMixin):
     _name = 'province'
 
     code = scrapy.Field()
     name = scrapy.Field()
+    year = scrapy.Field()
 
 
 class CityItem(scrapy.Item, MongoMixin):
@@ -34,6 +39,7 @@ class CityItem(scrapy.Item, MongoMixin):
 
     code = scrapy.Field()
     name = scrapy.Field()
+    year = scrapy.Field()
 
 
 class CountyItem(scrapy.Item, MongoMixin):
@@ -41,6 +47,7 @@ class CountyItem(scrapy.Item, MongoMixin):
 
     code = scrapy.Field()
     name = scrapy.Field()
+    year = scrapy.Field()
 
 
 class TownItem(scrapy.Item, MongoMixin):
@@ -48,6 +55,7 @@ class TownItem(scrapy.Item, MongoMixin):
 
     code = scrapy.Field()
     name = scrapy.Field()
+    year = scrapy.Field()
 
 
 class VillageItem(scrapy.Item, MongoMixin):
@@ -56,5 +64,5 @@ class VillageItem(scrapy.Item, MongoMixin):
     code = scrapy.Field()
     type = scrapy.Field()
     name = scrapy.Field()
-
+    year = scrapy.Field()
 

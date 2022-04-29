@@ -50,9 +50,9 @@ CONCURRENT_REQUESTS_PER_IP = 1
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'area_code.middlewares.AreaCodeDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   'area_code.middlewares.AreaCodeDownloaderMiddleware': 543,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -99,3 +99,6 @@ LEVEL_COUNTY = 3
 LEVEL_TOWN = 4
 LEVEL_VILLAGE = 5
 LEVEL_SPIDER = 3
+
+YEARS = ['all']
+# YEARS = ['2021年']
